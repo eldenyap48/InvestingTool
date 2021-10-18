@@ -1,0 +1,60 @@
+{% extends "investing/layout.html" %}
+
+{% load static %}
+
+{% block title %} {{title}} {% endblock %}
+
+{% block script %}
+    <link rel="stylesheet" href="{% static 'investing/index.css' %}" />
+    <script id="template" type="text/template">
+
+        <div class="content">
+
+            <div class="name">
+                <div class="title"><a href="/stock/{% templatetag openvariable %} stock {% templatetag closevariable %}">{% templatetag openvariable %} stock {% templatetag closevariable %} [{% templatetag openvariable %} market {% templatetag closevariable %}]</a></div>
+                <div class="mt-1">Volume: {% templatetag openvariable %} volume {% templatetag closevariable %}</div>
+            </div>
+
+            <div class="value">
+                <div style="text-align:center;"><strong class="price" data-change="{% templatetag openvariable %} change {% templatetag closevariable %}">{% templatetag openvariable %} price {% templatetag closevariable %}</strong></div>
+                <div class="change_value"><strong>{% templatetag openvariable %} valueChange {% templatetag closevariable %} <br /> {% templatetag openvariable %} percentageChange {% templatetag closevariable %}</strong></div>
+            </div>
+
+            <div class="PL">
+                <span>
+                    <span><strong>P/L: <span class="PL_value">{% templatetag openvariable %} pl {% templatetag closevariable %}</span></strong></span>
+                    <br />
+                    <span><strong>Total Value: {% templatetag openvariable %} total_value {% templatetag closevariable %}</strong></span>
+                </span>
+            </div>
+
+        </div>
+
+    </script>
+    <script>
+        var stocks = {{ stocks | safe}};
+        {% if user.is_authenticated %}
+            var authenticated = true;
+        {% else %}
+            var authenticated = false;
+        {% endif %}
+    </script>
+    <script src="{% static 'investing/index.js' %}"></script>
+{% endblock %}
+
+{% block body %}
+
+<h1> My Watchlist </h1>
+
+<div id="login">
+    <a href="{% url 'login' %}">Login</a> to View Watchlist
+</div>
+
+<div id="message">
+    Add Stocks to Watchlist
+</div>
+
+<div id="wrapper">
+</div>
+
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "investing/layout.html" %}
+
+{% load static %}
+
+{% block title %} {{stock}} {% endblock %}
+
+{% block script %}
+
+{% endblock %}
+
+{% block body %}
+    <h1>Search Results - <span id="search_query">{{search_query}}</span></h1>
+    <div id="container" class="mt-5">
+        <ul>
+            {% for user in users %}
+                <li class="mt-3" style="font-size:20px;"><a href="{% url 'view_user' user%}">{{ user }}</a><span style="font-style:italic;">      [User]</span></li>
+            {% empty %}
+                {% if symbol %}
+                {% else %}
+                    <li style="font-size:20px; color:red;">No Results Found</li>
+                {% endif %}
+            {% endfor %}
+
+            {% if symbol %}
+                <li class="mt-3" style="font-size:20px;"><a href="{% url 'stock' symbol %}">{{ symbol }}</a><span style="font-style:italic;">        [Stock]</span></li>
+            {% endif %}
+        </ul>
+    </div>
+{% endblock %}

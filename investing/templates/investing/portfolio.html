@@ -1,0 +1,210 @@
+{% extends "investing/layout.html" %}
+
+{% load static %}
+
+{% block title %} My Portfolio {% endblock %}
+
+{% block script %}
+
+    <link rel="stylesheet" href="{% static 'investing/portfolio.css' %}" />
+    <script src="{% static 'investing/portfolio.js' %}"></script>
+
+    <script id="template" type="text/template">
+
+        <div class="row single_label">
+            <div class="col-md-6 mt-3" style="text-align: left;font-size:15px; padding-left: 10%">
+                <button type="button" class="btn btn-danger delete_label" style="display:inline-block; margin-right:10px; border-radius:25%" data-id="{% templatetag openvariable %} category_id {% templatetag closevariable %}">-</button>
+                <span class="category">{% templatetag openvariable %} category {% templatetag closevariable %}</span>
+            </div>
+            <div class="col-md-6 mt-3" style="text-align: center;font-size:15px;">
+                <input type="text" class="label" value="{% templatetag openvariable %} data {% templatetag closevariable %}"/>
+            </div>
+        </div>
+
+    </script>
+
+{% endblock %}
+
+{% block body %}
+
+    <h1>My Portfolio Analysis</h1>
+
+    <div id="analysis_container" class="mt-5 shadow border p-3" style="display: none;">
+        <button class="btn btn-outline-dark" type="button" id="close_analysis">x</button>
+
+        <div class="mt-4">
+            <input class="form-check-input" type="checkbox" id="check_analysis">
+            <label class="form-check-label" for="check">
+                Show Only Open Positions
+            </label>
+        </div>
+
+        <div class="mt-4 d-flex flex-wrap">
+            <div class="p-3" style="font-weight:bold;font-size:22px;">Overall P/L: <span id="overall_pl">$</span></div>
+            <div class="p-3 ml-3" style="font-weight:bold;font-size:22px;">Open P/L: <span id="open_pl">$</span></div>
+            <div class="p-3 ml-3" style="font-weight:bold;font-size:22px;">Closed P/L: <span id="close_pl">$</span></div>
+        </div>
+
+    </div>
+
+    <div id="portfolio_container">
+        <div class="form-check mt-5">
+            <input class="form-check-input" type="checkbox" id="check">
+            <div>
+                <label class="form-check-label" for="check">
+                    Show Only Open Positions
+                </label>
+            </div>
+            <div class="mt-3">
+                <button class="btn btn-success" type="button" id="analyse">Analyse Positions</button>
+            </div>
+        </div>
+
+        <div class="table-responsive mt-3" style="width:100%;">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Stock</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Purchase Price ($)</th>
+                        <th scope="col">Open/Close</th>
+                        <th scope="col">Current Price</th>
+                        <th scope="col">Closing Price ($)</th>
+                        <th scope="col">P/L ($)</th>
+                        <th class="col">Labels</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for holding in open_positions %}
+                        <tr class="holding open_holding">
+                            <th class="stock">{{ holding.stock }}</th>
+                            <td class="quantity">{{ holding.quantity }}</td>
+                            <td class="ave_price">{{ holding.ave_price }}</td>
+                            <td class="open_close" style="color:green;">Open</td>
+                            <td class="currentPrice"></td>
+                            <td class="sellingPrice">-</td>
+                            <td class="pl"></td>
+                            <td class="labels">
+                                {% for label in holding.labels.all %}
+                                    <span>{{label}},</span>
+                                {% endfor %}
+                            </td>
+                            <td><a href="#" type="button" class="edit" data-id="{{holding.id}}" data-stock="{{holding.stock.symbol}}" data-quantity="{{holding.quantity}}" data-price="{{holding.ave_price}}">Edit</a></td>
+                        </tr>
+                    {% empty %}
+                        <tr class="empty">
+                            <th class="stock">No Open Positions</th>
+                            <td class="quantity">-</td>
+                            <td class="ave_price">-</td>
+                            <td class="open_close">-</td>
+                            <td class="currentPrice">-</td>
+                            <td class="sellingPrice">-</td>
+                            <td class="pl">-</td>
+                            <td class="labels">-</td>
+                        </tr>
+                    {% endfor %}
+                    {% for holding in closed_positions %}
+                        <tr class="holding closed_holding closed_not_empty">
+                            <th class="stock">{{ holding.stock }}</th>
+                            <td class="quantity">{{ holding.quantity }}</td>
+                            <td class="ave_price">{{ holding.ave_price }}</td>
+                            <td class="open_close" style="color:red;">Closed</td>
+                            <td class="currentPrice">-</td>
+                            <td class="sellingPrice">{{ holding.closing_price }}</td>
+                            {% if holding.closing_pl >= 0 %}
+                                <td class="pl" style="color:green;">{{ holding.closing_pl }}</td>
+                            {% else %}
+                                <td class="pl" style="color:red;">{{ holding.closing_pl }}</td>
+                            {% endif %}
+                            <td class="labels">
+                                {% for label in holding.labels.all %}
+                                    <span>{{label}},</span>
+                                {% endfor %}
+                            </td>
+                            <td><a href="#" type="button" class="edit" data-id="{{holding.id}}" data-stock="{{holding.stock.symbol}}" data-close="{{holding.close}}" data-closingprice="{{holding.closing_price}}" data-quantity="{{holding.quantity}}" data-price="{{holding.ave_price}}">Edit</a></td>
+                        </tr>
+                    {% empty %}
+                        <tr class="empty closed_holding">
+                            <th class="stock">No Closed Positions</th>
+                            <td class="quantity">-</td>
+                            <td class="ave_price">-</td>
+                            <td class="open_close">-</td>
+                            <td class="currentPrice">-</td>
+                            <td class="sellingPrice">-</td>
+                            <td class="pl">-</td>
+                            <td class="labels"></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="text-align: right;">
+            <button id="add" class="btn btn-outline-success me-3" type="submit">Add</button>
+        </div>
+
+        <hr class="mt-3 mb-5"/>
+
+        <div class="flex-wrap shadow border" id="form">
+
+            <div style="width:100%;" class="ml-3">
+                <h3 class="d-inline" id="header">Add to Portfolio</h3>
+                <button class="close btn btn-outline-dark">x</button>
+                <hr />
+            </div>
+
+            <div id="edit_form" class="col-md-6">
+                <form method="post" action="{% url 'change_holdings' %}">
+                    {% csrf_token %}
+                    <div class="mb-2">
+                        <label for="ticker" class="form-label">Stock Ticker</label>
+                        <input autocomplete="off" type="text" class="form-control" id="ticker" name="ticker">
+                    </div>
+                    <div class="mb-2">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input autocomplete="off" type="text" class="form-control" id="quantity" name="quantity">
+                        <div id="emailHelp" class="form-text">Number of shares bought</div>
+                    </div>
+                    <div class="mb-2">
+                        <label for="purchasePrice" class="form-label">Purchase Price</label>
+                        <input autocomplete="off" type="text" class="form-control" id="purchasePrice" name="purchasePrice">
+                    </div>
+                    <div class="mb-2">
+                        <label for="closingPrice" class="form-label">Closing Price</label>
+                        <input autocomplete="off" type="text" class="form-control" id="closingPrice" name="closingPrice">
+                        <div id="emailHelp" class="form-text">If it is an open position, leave this field blank</div>
+                    </div>
+                    <input hidden type="text" id="action" name="action"/>
+                    <input hidden type="text" id="holding_id" name="holding_id" />
+                    <input hidden type="text" id="status"  name="status" value="portfolio"/>
+                    <button id="submit_edit" class="btn btn-success edit_button" type="submit">Save</button>
+                    <button id="delete_entry" class="btn btn-danger edit_button" type="submit">Delete</button>
+                </form>
+            </div>
+
+            <div class="col-md-6 mt-1" id="overall_label_container">
+                <div id="label_form">
+                    <div class="mb-3">
+                        <h3 class="d-inline">Labels</h3>
+                        <hr />
+                    </div>
+                </div>
+                <div id="label_container">
+                    <div class="col-md-6">
+                        <form class="row g-3">
+                          <div class="col-auto">
+                            <input type="text" class="form-control" id="newCategory" placeholder="New Category">
+                          </div>
+                          <div class="col-auto">
+                            <button type="button" class="btn btn-success mb-3" id="addCategory">+</button>
+                          </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}

@@ -1,0 +1,17 @@
+#following-status {
+    text-align: center;
+    font-size: 18px;
+    margin-bottom:15px;
+}
+
+.following-btn {
+    position: absolute;
+    right: 3%;
+    top:14%;
+}
+
+#total_pl {
+    position: absolute;
+    right:5%;
+    font-size:20px;
+}

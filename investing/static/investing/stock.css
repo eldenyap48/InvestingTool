@@ -1,0 +1,111 @@
+.star {
+    font-size: 250%;
+    color:orange;
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+        top:0%;
+    }
+    35% {
+        opacity: 60%;
+        top:10%;
+    }
+    100% {
+        opacity: 0;
+        top:10%;
+    }
+}
+
+#message {
+    position:absolute;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    font-size: 150%;
+    border-radius: 6px;
+    padding:10px;
+    z-index:1;
+    top:0%;
+    left:50%;
+    width:200px;
+    margin-left:-100px;
+    opacity: 0%;
+    display:none;
+}
+
+#edit_form {
+    height:520px;
+    top:50%;
+    margin-top:-260px;
+    left:50%;
+    width: 50%;
+    margin-left:-25%;
+    visibility:hidden;
+    position:fixed;
+    border-radius: 6px;
+    padding:15px;
+    z-index:1;
+    background-color: #EEEDE7;
+}
+
+.close {
+    cursor: pointer;
+    position: absolute;
+    right:2%;
+}
+
+.animation {
+    animation-name: fadeInOut;
+    animation-duration: 4s;
+    animation-fill-mode: forwards;
+    animation-play-state: paused;
+}
+
+#currentPrice {
+    font-size: 200%;
+    font-weight: bold;
+}
+
+#change{
+    font-size: 200%;
+    color:white;
+    background-color: green;
+    border-radius: 6px;
+}
+
+.btn-danger {
+    position: absolute;
+    right:15px;
+}
+
+#add_container {
+    width: 100%;
+    text-align: center;
+}
+
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+  text-align: center;
+}
+
+.tab button {
+    background-color: inherit;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+    border-radius: 6px;
+}
+
+.tab button:hover {
+    background-color: #ddd;
+}
+
+.active {
+    background-color: #ccc;
+}

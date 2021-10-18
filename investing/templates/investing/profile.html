@@ -1,0 +1,121 @@
+{% extends "investing/layout.html" %}
+
+{% load static %}
+
+{% block title %} {{user.username}} {% endblock %}
+
+{% block script %}
+    <link rel="stylesheet" href="{% static 'investing/profile.css' %}" />
+    <script>
+        var view_user = "{{view_user.username|safe}}"
+    </script>
+    <script src="{% static 'investing/profile.js' %}"></script>
+{% endblock %}
+
+{% block body %}
+
+    {% ifequal view_user user %}
+        <h1>My Profile</h1>
+    {% else %}
+        <h1>{{view_user.username}}'s Profile</h1>
+    {% endifequal %}
+    <div class="d-flex flex-wrap justify-content-center mb-3 mt-3" id="following-status">
+        <div>
+            <div>
+                <strong id="followers">{{view_user.followers.count}}</strong>
+            </div>
+            Followers
+        </div>
+        <div class="status" style="margin-left:4em;">
+            <div>
+                <strong>{{view_user.following.count}}</strong>
+            </div>
+            Following
+        </div>
+        {% if user.is_authenticated %}
+            {% ifequal view_user user %}
+            {% else %}
+                {% if view_user in user.following.all %}
+                    <button class="btn btn-danger following-btn" data-following="False" data-user="{{ view_user.username }}">Unfollow</button>
+                {% else %}
+                    <button class="btn btn-success following-btn" data-following="True" data-user="{{ view_user.username }}">Follow</button>
+                {% endif %}
+            {% endifequal %}
+        {% endif %}
+    </div>
+
+    <hr/>
+
+    <h3>Portfolio</h3>
+
+
+    <div class="table-responsive">
+        <table class="table table-hover mt-3">
+            <thead>
+                <tr>
+                    <th scope="col">Stock</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Purchase Price ($)</th>
+                    <th scope="col">Open/Close</th>
+                    <th scope="col">Closing Price ($)</th>
+                    <th scope="col">P/L ($)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for holding in open_positions %}
+                    <tr class="holding open_holding">
+                        <th class="stock">{{ holding.stock }}</th>
+                        <td class="quantity">{{ holding.quantity }}</td>
+                        <td class="ave_price">{{ holding.ave_price }}</td>
+                        <td class="open_close" style="color:green;">Open</td>
+                        <td class="sellingPrice">-</td>
+                        <td class="pl">-</td>
+                    </tr>
+                {% empty %}
+                    <tr class="empty">
+                        <th class="stock">No Open Positions</th>
+                        <td class="quantity">-</td>
+                        <td class="ave_price">-</td>
+                        <td class="open_close">-</td>
+                        <td class="sellingPrice">-</td>
+                        <td class="pl">-</td>
+                    </tr>
+                {% endfor %}
+                {% for holding in closed_positions %}
+                    <tr class="holding closed_holding">
+                        <th class="stock">{{ holding.stock }}</th>
+                        <td class="quantity">{{ holding.quantity }}</td>
+                        <td class="ave_price">{{ holding.ave_price }}</td>
+                        <td class="open_close" style="color:red;">Closed</td>
+                        <td class="sellingPrice">{{ holding.closing_price }}</td>
+                        {% if holding.closing_pl >= 0 %}
+                            <td class="pl" style="color:green;">{{ holding.closing_pl }}</td>
+                        {% else %}
+                            <td class="pl" style="color:red;">{{ holding.closing_pl }}</td>
+                        {% endif %}
+                    </tr>
+                {% empty %}
+                    <tr class="empty">
+                        <th class="stock">No Closed Positions</th>
+                        <td class="quantity">-</td>
+                        <td class="ave_price">-</td>
+                        <td class="open_close">-</td>
+                        <td class="sellingPrice">-</td>
+                        <td class="pl">-</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div id="total_pl">
+        <strong>Total Closed P/L ($):
+        {% if view_user.total_closed_pl >= 0 %}
+            <span style="color:green;">{{view_user.total_closed_pl}}</span>
+        {% else %}
+            <span style="color:red;">{{view_user.total_closed_pl}}</span>
+        {% endif %}
+        </strong>
+    </div>
+
+{% endblock %}

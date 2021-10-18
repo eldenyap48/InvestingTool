@@ -1,0 +1,249 @@
+{% extends "investing/layout.html" %}
+
+{% load static %}
+
+{% block title %} {{stock}} {% endblock %}
+
+{% block script %}
+    <script>
+        var ticker = "{{ stock | safe }}";
+    </script>
+    <script src="{% static 'investing/stock.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'investing/stock.css' %}" />
+
+    <script id="template" type="text/template">
+        <div class="p-3 m-2 border shadow"><span style="font-weight:bold;">{% templatetag openvariable %} information {% templatetag closevariable %} </span>{% templatetag openvariable %} data {% templatetag closevariable %}</div>
+    </script>
+
+{% endblock %}
+
+{% block body %}
+
+    <div id="message" class="animation">
+        Added to watchlist
+    </div>
+
+    <div id="edit_form" class="shadow border">
+        <h3 class="d-inline" id="header">Add to Portfolio</h3>
+        <button class="close btn btn-outline-dark">x</button>
+        <hr />
+        <form method="post" action="{% url 'change_holdings' %}">
+            {% csrf_token %}
+            <div class="mb-2">
+                <label for="ticker" class="form-label">Stock Ticker</label>
+                <input autocomplete="off" type="text" class="form-control" id="ticker" name="ticker">
+            </div>
+            <div class="mb-2">
+                <label for="quantity" class="form-label">Quantity</label>
+                <input autocomplete="off" type="text" class="form-control" id="quantity" name="quantity">
+                <div id="emailHelp" class="form-text">Number of shares bought</div>
+            </div>
+            <div class="mb-2">
+                <label for="purchasePrice" class="form-label">Purchase Price</label>
+                <input autocomplete="off" type="text" class="form-control" id="purchasePrice" name="purchasePrice">
+            </div>
+            <div class="mb-2">
+                <label for="closingPrice" class="form-label">Closing Price</label>
+                <input autocomplete="off" type="text" class="form-control" id="closingPrice" name="closingPrice">
+                <div id="emailHelp" class="form-text">If it is an open position, leave this field blank</div>
+            </div>
+            <input hidden type="text" id="action" name="action"/>
+            <input hidden type="text" id="holding_id" name="holding_id" />
+            <button id="submit_edit" class="btn btn-success" type="submit">Add</button>
+            <button id="delete_entry" class="btn btn-danger" type="submit">Delete</button>
+        </form>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <h1 id="stock_name" class="d-inline"></h1>
+            {% if stock in user.watchlist.all %}
+                <span id="watchlist" class="ml-5 star" data-state="activated">&starf;</span>
+            {% else %}
+                <span id="watchlist" class="ml-5 star" data-state="unactivated">&star;</span>
+            {% endif %}
+            <div class="mt-4">
+                <div class="mt-2 p-2 d-inline" id="currentPrice"></div>
+                <div class="mt-2 p-2 d-inline" id="change"></div>
+            </div>
+            <div class="border p-3 shadow mt-4">
+                <h4>Date & Interval Settings</h4>
+                <hr />
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="start" class="form-label">Start Date</label>
+                        <input autocomplete="off" type="date" class="form-control" id="start">
+                    </div>
+                    <div class="mb-3">
+                        <label for="end" class="form-label">End Date</label>
+                        <input autocomplete="off" type="date" class="form-control" id="end">
+                        <div id="emailHelp" class="form-text">End Date should not be later than today</div>
+                    </div>
+                    <div class="input-group mb-3">
+                        <select class="form-select" id="interval">
+                            <option value="1m">1 Minute</option>
+                            <option value="2m">2 Minutes</option>
+                            <option value="5m">5 Minutes</option>
+                            <option value="15m">15 Minutes</option>
+                            <option value="30m">30 Minutes</option>
+                            <option value="60m">60 Minutes</option>
+                            <option value="1d" selected>1 Day</option>
+                            <option value="5d">5 Days</option>
+                            <option value="1wk">1 Week</option>
+                            <option value="1mo">1 Month</option>
+                            <option value="3mo">3 Months</option>
+                        </select>
+                        <label class="input-group-text" for="interval">Interval</label>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="view_history">Submit</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <canvas id="history" width="400" height="250"></canvas>
+            <script>
+
+                var data_points = []
+
+                // Getting current date in the yyyy-mm-dd format
+                var currentTime = new Date();
+                var dd = String(currentTime.getDate()).padStart(2, '0');
+                var mm = String(currentTime.getMonth() + 1).padStart(2, '0');
+                var yyyy = currentTime.getFullYear();
+                var today = yyyy + "-" + mm + "-" + dd;
+                document.querySelector('#end').value = today;
+
+                // By default, candlestick graph will show data from 14 days ago
+                // Getting date from 14 days ago in the yyyy-mm-dd format
+                var totalMLSeconds = currentTime.getTime();
+                var minus = 14 * 24 * 3600 * 1000;
+                var pastTime = new Date(totalMLSeconds - minus);
+                var dd = String(pastTime.getDate()).padStart(2, '0');
+                var mm = String(pastTime.getMonth() + 1).padStart(2, '0');
+                var yyyy = pastTime.getFullYear();
+                var past = yyyy + "-" + mm + "-" + dd;
+                document.querySelector('#start').value = past;
+
+                // Obtain historical data of the stock
+                let csrftoken = Cookies.get('csrftoken');
+                fetch('/get_history', {
+                    method:'POST',
+                    body: JSON.stringify({
+                        "ticker": ticker,
+                        "start": past,
+                        "end": today,
+                        "interval": "1d",
+                    }),
+                    headers: {"X-CSRFToken": csrftoken}
+                })
+                .then(response => response.json())
+                .then(message => {
+                    data = message.data;
+                    for (var i=0; i<data.length; i++){
+                        let date = luxon.DateTime.fromRFC2822(data[i][0]);
+                        var data_point = {
+                            x: date.valueOf(),
+                            o: Math.round(data[i][1] * 100)/100,
+                            h: Math.round(data[i][2] * 100)/100,
+                            l: Math.round(data[i][3] * 100)/100,
+                            c: Math.round(data[i][4] * 100)/100,
+                        }
+                        data_points.push(data_point);
+                    }
+
+                    var ctx = document.getElementById('history').getContext('2d');
+                    var history = new Chart(ctx, {
+                        type: 'candlestick',
+                        data: {
+                            datasets: [{
+                                label: 'Candlestick Chart',
+                                data: data_points,
+                            }]
+                        },
+                        options: {
+                        }
+                    });
+                })
+            </script>
+        </div>
+    </div>
+    {% if user.is_authenticated %}
+    <div class="row mt-3 pt-3">
+        <div class="col-md-6">
+            <h2 class="mb-3">Open Position(s)</h2>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Purchase Price ($)</th>
+                        <th scope="col">Current Value ($)</th>
+                        <th scope="col">P/L ($)</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for holding in open_positions %}
+                        <tr class="holding open_holding">
+                            <td class="quantity">{{ holding.quantity }}</td>
+                            <td class="ave_price">{{ holding.ave_price }}</td>
+                            <td class="currentValue"></td>
+                            <td class="pl"></td>
+                            <td><a href="#" type="button" class="edit" data-id="{{holding.id}}" data-quantity="{{holding.quantity}}" data-price="{{holding.ave_price}}">Edit</a></td>
+                        </tr>
+                    {% empty %}
+                        <tr class="empty">
+                            <td class="quantity">No Open Positions</td>
+                            <td class="ave_price">-</td>
+                            <td class="currentValue">-</td>
+                            <td class="pl">-</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-6">
+            <h2 class="mb-3">Closed Position(s)</h2>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Purchase Price ($)</th>
+                        <th scope="col">Closing Price ($)</th>
+                        <th scope="col">P/L ($)</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for holding in closed_positions %}
+                        <tr class="holding">
+                            <td class="quantity">{{ holding.quantity }}</td>
+                            <td class="ave_price">{{ holding.ave_price }}</td>
+                            <td class="closing_price">{{ holding.closing_price }}</td>
+                            {% if holding.closing_pl < 0 %}
+                                <td class="pl" style="color:red;">{{ holding.closing_pl }}</td>
+                            {% else %}
+                                <td class="pl" style="color:green;">{{ holding.closing_pl }}</td>
+                            {% endif %}
+                            <td><a href="#" type="button" class="edit" data-id="{{holding.id}}" data-close="{{holding.close}}" data-closingprice="{{holding.closing_price}}" data-quantity="{{holding.quantity}}" data-price="{{holding.ave_price}}">Edit</a></td>
+                        </tr>
+                    {% empty %}
+                        <tr class="empty">
+                            <td class="quantity">No Closed Positions</td>
+                            <td class="ave_price">-</td>
+                            <td class="closing_price">-</td>
+                            <td class="pl">-</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p id="add_container">
+            <button id="add" type="button" class="btn btn-outline-success">Add Position</button>
+        </p>
+    </div>
+    {% endif %}
+    <div class="row mt-3">
+        <h1>More Information</h1>
+        <div class="d-flex flex-wrap p-3 justify-content-center"></div>
+    </div>
+{% endblock %}

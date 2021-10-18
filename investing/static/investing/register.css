@@ -1,0 +1,7 @@
+.form-group, .btn, #login {
+    margin-top: 1em;
+}
+
+#message {
+    color:red;
+}

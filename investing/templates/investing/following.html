@@ -1,0 +1,23 @@
+{% extends "investing/layout.html" %}
+
+{% load static %}
+
+{% block title %} Users Followed {% endblock %}
+
+{% block script %}
+    <link rel="stylesheet" href="{% static 'investing/following.css' %}" />
+{% endblock %}
+
+{% block body %}
+    <h1>Following</h1>
+
+    <div class="mt-5" id="container">
+        <ul>
+            {% for user in following %}
+                <li><a class="nav-link active mx-3" aria-current="page" href="{% url 'view_user' username=user.username %}">{{user.username}}</a></li>
+            {% empty %}
+                <li style="color:red;">Not following anyone</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

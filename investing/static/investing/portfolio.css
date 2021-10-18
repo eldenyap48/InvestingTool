@@ -1,0 +1,30 @@
+#form{
+    border-radius: 15px;
+    display: none;
+    padding: 15px;
+}
+
+#label_form, #edit_form {
+    padding:10px;
+    margin-top: 5px;
+}
+
+.close {
+    cursor: pointer;
+    float: right;
+}
+
+.edit_button {
+    float:right;
+    margin-right: 10px;
+}
+
+#label_container {
+    padding-top: 30px;
+    padding-left: 13%;
+}
+
+.btn-outline-dark {
+    float:right;
+    margin-right: 10px;
+}

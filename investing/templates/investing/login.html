@@ -1,0 +1,27 @@
+{% extends "investing/layout.html" %}
+
+{% load static %}
+
+{% block title %}Login{% endblock %}
+
+{% block script %}
+    <link rel="stylesheet" href="{% static 'investing/login.css' %}" />
+{% endblock %}
+
+{% block body %}
+
+    <h1>Login</h1>
+
+    <form action="{% url 'login' %}" method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input autofocus autocomplete="off" type="text" class="form-control" name="username" id="username">
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input autocomplete="off" type="password" name="password" class="form-control" id="password">
+        </div>
+        <button type="submit" class="btn btn-primary">Login</button>
+    </form>
+{% endblock %}
