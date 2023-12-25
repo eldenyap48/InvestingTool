@@ -1,4 +1,4 @@
-# CS50W Final Project (InvestingTool)
+# InvestingTool
 
 ## Introduction
 The InvestingTool is a versatile application used to track stock data, analyse portfolios and connect with other people. A video demonstration can be found [here](https://youtu.be/flmYipgmsj8).
